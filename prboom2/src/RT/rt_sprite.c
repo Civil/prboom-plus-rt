@@ -26,6 +26,7 @@
 
 #include <math.h>
 
+#include "rt_minmax.h"
 #include "doomstat.h"
 #include "e6y.h"
 #include "lprintf.h"

@@ -1141,6 +1141,10 @@ static hud_cfg_item_t all_cfg_items[] =
   { "gkeys",            -316,     4 },
 };
 
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(a) (sizeof(a) / sizeof(*(a)))
+#endif
+
 void HU_LoadHUDDefs(void)
 {
   static int init = 0;

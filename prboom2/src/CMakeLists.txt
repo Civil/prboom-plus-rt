@@ -427,15 +427,24 @@ function(AddGameExecutable TARGET SOURCES)
     
     # RT library
     add_library(RayTracedGL1 SHARED IMPORTED)
-    set_target_properties(RayTracedGL1 PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "$ENV{RTGL1_SDK_PATH}/Include"
-        IMPORTED_LOCATION       "$ENV{RTGL1_SDK_PATH}/Build/x64-Release/RayTracedGL1.dll"
-        IMPORTED_LOCATION_DEBUG "$ENV{RTGL1_SDK_PATH}/Build/x64-Debug/RayTracedGL1.dll"
-        IMPORTED_IMPLIB         "$ENV{RTGL1_SDK_PATH}/Build/x64-Release/RayTracedGL1.lib"
-        IMPORTED_IMPLIB_DEBUG   "$ENV{RTGL1_SDK_PATH}/Build/x64-Debug/RayTracedGL1.lib"
-    )
+    if (WIN32)
+        set_target_properties(RayTracedGL1 PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "$ENV{RTGL1_SDK_PATH}/Include"
+            IMPORTED_LOCATION       "$ENV{RTGL1_SDK_PATH}/Build/x64-Release/RayTracedGL1.dll"
+            IMPORTED_LOCATION_DEBUG "$ENV{RTGL1_SDK_PATH}/Build/x64-Debug/RayTracedGL1.dll"
+            IMPORTED_IMPLIB         "$ENV{RTGL1_SDK_PATH}/Build/x64-Release/RayTracedGL1.lib"
+            IMPORTED_IMPLIB_DEBUG   "$ENV{RTGL1_SDK_PATH}/Build/x64-Debug/RayTracedGL1.lib"
+        )
+	set(RTGL1_LIB "RayTracedGL1.dll")
+    else()
+	set_target_properties(RayTracedGL1 PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "$ENV{RTGL1_SDK_PATH}/Include"
+            IMPORTED_LOCATION       "$ENV{RTGL1_SDK_PATH}/libRayTracedGL1.so"
+        )
+	set(RTGL1_LIB "libRayTracedGL1.so")
+    endif()
     target_link_libraries(${TARGET} PRIVATE RayTracedGL1)
-    target_compile_definitions(${TARGET} PRIVATE RG_USE_SURFACE_WIN32)
+    target_compile_definitions(${TARGET} PRIVATE RG_USE_SURFACE_XLIB)
     target_compile_definitions(${TARGET} PRIVATE RT_CUSTOM_MENU=1 RT_DISABLE_SMALL_VIEWPORTS=1 
       RT_DOOM1_HACKS=1 RT_CUSTOM_MAP_DATA=1)
     # Copy library files
@@ -447,7 +456,7 @@ function(AddGameExecutable TARGET SOURCES)
 	    "$<$<CONFIG:MinSizeRel>:${RTGL1_DLL}>"
 	    "$<$<CONFIG:RelWithDebInfo>:${RTGL1_DLL}>"
 	    "$<$<CONFIG:Release>:${RTGL1_DLL}>"
-	$<TARGET_FILE_DIR:${TARGET}>/RayTracedGL1.dll)
+	    $<TARGET_FILE_DIR:${TARGET}>/${RTGL1_LIB})
 
 endfunction()
 

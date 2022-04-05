@@ -25,6 +25,7 @@
  */
 
 #include "rt_textures.h"
+#include "rt_minmax.h"
 
 #include "rt_main.h"
 #include "r_patch.h"

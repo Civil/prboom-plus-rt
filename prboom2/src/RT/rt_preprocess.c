@@ -28,6 +28,7 @@
 
 #include "rt_common.h"
 
+#include "rt_minmax.h"
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -40,7 +41,7 @@
 #include "WIN/win_fopen.h"
 #endif
 
-#include <gl/GLU.h>
+#include <GL/glu.h>
 
 #include "doomtype.h"
 #include "lprintf.h"

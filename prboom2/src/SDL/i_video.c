@@ -1495,18 +1495,11 @@ void I_UpdateVideoMode(void)
 
   if (V_GetMode() == VID_MODERT)
   {
-    // get raw WinAPI handles from SDL
-    HINSTANCE hinstance;
-    HWND hwnd;
-    {
-      SDL_SysWMinfo wmInfo;
-      SDL_VERSION(&wmInfo.version);
-      SDL_GetWindowWMInfo(sdl_window, &wmInfo);
-      hwnd = wmInfo.info.win.window;
-      hinstance = wmInfo.info.win.hinstance;
+    int status = RT_Init(sdl_window);
+    if (status != 0) {
+      // TODO: improve error message
+      I_Error("Unsupported SDL backend");
     }
-
-    RT_Init(hinstance, hwnd);
 
     M_ChangeFOV();
     deh_changeCompTranslucency();

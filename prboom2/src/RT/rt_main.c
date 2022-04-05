@@ -25,7 +25,10 @@
  */
 
 #include "rt_main.h"
+#include "rt_minmax.h"
 
+#include <SDL.h>
+#include <SDL_syswm.h>
 #include <SDL_timer.h>
 #include <GL/glu.h>
 
@@ -50,21 +53,15 @@ static void RT_Print(const char *pMessage, void *pUserData)
   lprintf(LO_ERROR, "%s\n", pMessage);
 }
 
+// TODO: Make configurable
+#define USE_X11
 
-void RT_Init(HINSTANCE hinstance, HWND hwnd)
+int RT_Init(SDL_Window *window)
 {
-  RgWin32SurfaceCreateInfo win32Info =
-  {
-    .hinstance = hinstance,
-    .hwnd = hwnd
-  };
-
   RgInstanceCreateInfo info =
   {
     .pAppName = "PRBoom",
     .pAppGUID = "297e3cc1-4076-4a60-ac7c-5904c5db1313",
-
-    .pWin32SurfaceInfo = &win32Info,
 
   #ifndef NDEBUG
     .enableValidationLayer = true,
@@ -104,14 +101,69 @@ void RT_Init(HINSTANCE hinstance, HWND hwnd)
     .vertexColorStride = sizeof(uint32_t)
   };
 
+  SDL_SysWMinfo wmInfo;
+  SDL_VERSION(&wmInfo.version);
+  SDL_GetWindowWMInfo(window, &wmInfo);
+  #if defined(USE_WIN32)
+  RgWin32SurfaceCreateInfo surface =
+  {
+    .hinstance = wmInfo.info.win.hinstance,
+    .hwnd = wmInfo.info.win.window
+  };
+  info.pWin32SurfaceInfo = &surface;
+  #elif defined(USE_X11)
+  RgXlibSurfaceCreateInfo surface =
+  {
+    .dpy = wmInfo.info.x11.display,
+    .window = wmInfo.info.x11.window
+  };
+  info.pXlibSurfaceCreateInfo = &surface;
+  #elif defined(USE_WAYLAND)
+  RgWaylandSurfaceCreateInfo surface =
+  {
+    .wl_display = wmInfo.info.wl.display,
+    .wl_surface = wmInfo.info.wl.shell_surface
+  };
+  info.pWaylandSurfaceCreateInfo = &surface;
+  #else
+  #error("Unsupported backend")
+  #endif
+
+  /*
+  switch (wmInfo.subsystem) {
+    case SDL_SYSWM_WINDOWS:
+      RgWin32SurfaceCreateInfo surfaceInfo = {
+        .hinstance = wmInfo.info.win.hinstance,
+        .hwnd = wmInfo.info.win.window
+      };
+      info.pWin32SurfaceInfo = &surfaceInfo;
+      break;
+    case SDL_SYSWM_X11:
+      info.pXlibSurfaceCreateInfo = &RgXlibSurfaceCreateInfo
+      {
+        .dpy = wmInfo.info.x11.display,
+        .window = wmInfo.info.x11.window
+      };
+      break;
+    case SDL_SYSWM_WAYLAND:
+      info.pWaylandSurfaceCreateInfo = &RgWaylandSurfaceCreateInfo
+      {
+        .wl_display = wmInfo.info.wl.display,
+        .wl_surface = wmInfo.info.wl.shell_surface
+      };
+      break;
+    default:
+      // SDL backend not supported yet
+      return -1;
+  }
+  */
+
   RgResult r = rgCreateInstance(&info, &rtmain.instance);
   if (r != RG_SUCCESS)
   {
     I_Error("Can't initialize ray tracing engine");
-    return;
+    return r;
   }
-
-  rtmain.hwnd = hwnd;
 
 
 #ifndef NDEBUG
@@ -134,6 +186,7 @@ void RT_Init(HINSTANCE hinstance, HWND hwnd)
 
 
   I_AtExit(RT_Destroy, true);
+  return 0;
 }
 
 
@@ -194,12 +247,7 @@ static RgExtent2D GetCurrentHWNDSize()
 {
   RgExtent2D extent = { 0,0 };
 
-  RECT rect;
-  if (GetClientRect(rtmain.hwnd, &rect))
-  {
-    extent.width = rect.right - rect.left;
-    extent.height = rect.bottom - rect.top;
-  }
+  SDL_GetWindowSize(rtmain.window, &extent.width, &extent.height);
 
   assert(extent.width > 0 && extent.height > 0);
   return extent;
@@ -290,7 +338,6 @@ static int  GetMaxBounceSpotAndPoly(int bounce_quality)
     default:  return 1;
   }
 }
-
 
 static void NormalizeRTSettings(rt_settings_t *settings)
 {

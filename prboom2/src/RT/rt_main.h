@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <SDL.h>
+
 #include "rt_common.h"
 #include "rt_textures.h"
 #include "rt_hud.h"
@@ -33,10 +35,15 @@
 #include "d_player.h"
 #include "r_defs.h"
 
+#ifndef _WIN32
+#define HWND void*
+#define HINSTANCE void*
+#endif
+
 typedef struct
 {
   RgInstance instance;
-  HWND hwnd;
+  SDL_Window *window;
 
   float mat_view[4][4];
   float mat_projectionvk[4][4];
@@ -69,7 +76,7 @@ typedef struct
 extern rtmain_t rtmain;
 
 
-void RT_Init(HINSTANCE hinstance, HWND hwnd);
+int RT_Init(SDL_Window *window);
 void RT_Destroy(void);
 
 void RT_StartFrame(void);

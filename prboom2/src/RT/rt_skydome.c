@@ -26,7 +26,7 @@
 
 #include "rt_main.h"
 #include "r_main.h"
-
+#include "rt_minmax.h"
 
 #define STRETCHSKY 0
 

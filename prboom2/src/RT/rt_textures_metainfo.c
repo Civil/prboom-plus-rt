@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 
+#include "rt_minmax.h"
 #include "rt_textures.h"
 
 #include "e6y.h"
